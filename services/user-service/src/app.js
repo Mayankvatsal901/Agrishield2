@@ -5,6 +5,7 @@ import morgan from "morgan";
 import profileRoutes from "./routes/profile.routes.js";
 import kycRoutes from "./routes/kyc.routes.js";
 import adminKYCRoutes from "./routes/admin.kyc.routes.js"
+import internalRoutes from "./routes/internal.routes.js";
 
 const app = express();
 
@@ -33,6 +34,7 @@ app.use("/api/profile", profileRoutes);
 app.use("/api/kyc", kycRoutes);
 
 app.use("/api/admin/kyc", adminKYCRoutes);
+app.use("/api/internal", internalRoutes);
 
 // app.get("/", (req, res) => {
 
