@@ -1,4 +1,5 @@
 import * as authService from "../services/auth.service.js";
+import User from "../models/User.js";
 
 export const register = async (req, res) => {
   try {
@@ -27,12 +28,11 @@ export const login = async (req, res) => {
 
   export const getCurrentUser = async (req, res) => {
 
+    const user = await User.findById(req.user.userId).select("-password");
+
     res.status(200).json({
+        success: true,
+        user
+    });
 
-        success:true,
-
-        user:req.user
-
-    })
-
-}
+};

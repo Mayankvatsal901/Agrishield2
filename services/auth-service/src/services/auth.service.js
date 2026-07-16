@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
 import User from "../models/User.js";
-import generateToken from "../utils/generateToken.js";
+import { generateToken } from "../../../../shared/auth/jwt.js";
 
 export const register = async (userData) => {
   const { email, password, role } = userData;
@@ -11,6 +11,10 @@ export const register = async (userData) => {
   if (existingUser) {
     throw new Error("User already exists with this email");
   }
+
+  if (role === "ADMIN") {
+    throw new Error("Admin registration is not allowed.");
+}
 
   // 2. Hash Password
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -23,7 +27,7 @@ export const register = async (userData) => {
   });
 
   // 4. Generate JWT
-  const token = generateToken(user._id);
+  const token = generateToken(user);
 
   // 5. Return Response
   return {
@@ -73,7 +77,7 @@ export const login = async (userData) => {
     await user.save();
   
     // 5. Generate JWT
-    const token = generateToken(user._id);
+    const token = generateToken(user);
   
     // 6. Return Response
     return {
