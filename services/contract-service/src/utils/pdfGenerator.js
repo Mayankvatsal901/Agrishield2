@@ -4,18 +4,30 @@
 // Responsible for generating the Agrishield Contract PDF.
 //
 // Input:
-//    Contract Data
+//
+// {
+//      contract,
+//      buyer,
+//      farmer,
+//      product
+// }
 //
 // Output:
-//    PDF saved inside /temp
-//
+//      PDF saved inside /temp
 // ============================================================
 
 import PDFDocument from "pdfkit";
 import fs from "fs";
 import path from "path";
 
-export const generateContractPDF = async (contract) => {
+export const generateContractPDF = async (data) => {
+
+    const {
+        contract,
+        buyer,
+        farmer,
+        product,
+    } = data;
 
     return new Promise((resolve, reject) => {
 
@@ -94,7 +106,7 @@ export const generateContractPDF = async (contract) => {
         doc.moveDown();
 
         // =====================================================
-        // Buyer / Farmer
+        // Farmer Details
         // =====================================================
 
         doc.font("Helvetica-Bold");
@@ -103,9 +115,19 @@ export const generateContractPDF = async (contract) => {
 
         doc.font("Helvetica");
 
-        doc.text(`Farmer ID : ${contract.farmerId}`);
+        doc.text(`Name    : ${farmer.fullName}`);
+
+        doc.text(`Phone   : ${farmer.phone}`);
+
+        doc.text(
+            `Address : ${farmer.address?.village || ""}, ${farmer.address?.district || ""}, ${farmer.address?.state || ""} - ${farmer.address?.pincode || ""}`
+        );
 
         doc.moveDown();
+
+        // =====================================================
+        // Buyer Details
+        // =====================================================
 
         doc.font("Helvetica-Bold");
 
@@ -113,12 +135,18 @@ export const generateContractPDF = async (contract) => {
 
         doc.font("Helvetica");
 
-        doc.text(`Buyer ID : ${contract.buyerId}`);
+        doc.text(`Name    : ${buyer.fullName}`);
+
+        doc.text(`Phone   : ${buyer.phone}`);
+
+        doc.text(
+            `Address : ${buyer.address?.village || ""}, ${buyer.address?.district || ""}, ${buyer.address?.state || ""} - ${buyer.address?.pincode || ""}`
+        );
 
         doc.moveDown();
 
         // =====================================================
-        // Product
+        // Contract Details
         // =====================================================
 
         doc.font("Helvetica-Bold");
@@ -126,6 +154,8 @@ export const generateContractPDF = async (contract) => {
         doc.text("Contract Details");
 
         doc.font("Helvetica");
+
+        doc.text(`Product  : ${product.name || product.productName}`);
 
         doc.text(`Quantity : ${contract.quantity} ${contract.unit}`);
 
@@ -152,7 +182,7 @@ export const generateContractPDF = async (contract) => {
         doc.moveDown();
 
         // =====================================================
-        // Terms
+        // Terms & Conditions
         // =====================================================
 
         doc.font("Helvetica-Bold");
@@ -181,7 +211,7 @@ export const generateContractPDF = async (contract) => {
             align: "center",
         });
 
-        doc.moveDown(0.2);
+        doc.moveDown(0.3);
 
         doc.fontSize(18);
 
