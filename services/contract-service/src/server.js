@@ -17,15 +17,15 @@ dotenv.config();
 import app from "./app.js";
 
 import connectDB from "./config/database.js";
-import { startPdfWorker } from "./workers/pdf.worker.js";
+const { startPdfWorker }=await import ("./workers/pdf.worker.js");
 
-import {
+ const {
     connectRabbitMQ,
-} from "./config/rabbitmq.js";
+} =await import  ("./config/rabbitmq.js");
 
-import {
+const {
     subscribeToDealAccepted,
-} from "./events/subscriber.js";
+}=await import("./events/subscriber.js");
 
 
 const PORT = process.env.PORT || 5005;

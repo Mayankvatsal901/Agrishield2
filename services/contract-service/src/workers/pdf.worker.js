@@ -1,22 +1,14 @@
 // ============================================================
 // PDF WORKER
-// ------------------------------------------------------------
-// Listens for "contract.generate" events.
-//
-// Responsibilities:
-// 1. Receive PDF Job
-// 2. Fetch Contract
-// 3. Generate PDF
-//
-// (Cloudinary Upload, DB Update and Notifications
-// will be added later.)
 // ============================================================
 
 import { getChannel } from "../config/rabbitmq.js";
-import Contract from "../models/Contract.js";
 import { generateContractPDF } from "../utils/pdfGenerator.js";
 import { getContractData } from "../services/contractData.service.js";
-
+import fs from "fs";
+import Contract from "../models/Contract.js";
+import { uploadPDF } from "../utils/cloudinary.js";
+import { publishContractGenerated } from "../events/publisher.js";
 const QUEUE_NAME = "contract.generate";
 
 export const startPdfWorker = async () => {
@@ -33,6 +25,7 @@ export const startPdfWorker = async () => {
     console.log("📄 PDF Worker Started...");
 
     channel.consume(
+
         QUEUE_NAME,
 
         async (message) => {
@@ -41,54 +34,78 @@ export const startPdfWorker = async () => {
 
             try {
 
-                const data = JSON.parse(
+                const job = JSON.parse(
                     message.content.toString()
                 );
 
                 console.log("\n==============================");
                 console.log("📥 PDF JOB RECEIVED");
                 console.log("==============================");
+                console.log(job);
 
-                console.log(data);
+                // ---------------------------------------------
+                // Fetch Complete Contract Data
+                // ---------------------------------------------
 
-                // ----------------------------------------------------
-                // Fetch Contract
-                // ----------------------------------------------------
+                const contractData =
+                    await getContractData(
+                        job.contractId
+                    );
 
-                const contract = await Contract.findById(
-                    data.contractId
-                );
-                const data1 =
-                await getContractData(
-                data.contractId
-                );
-
-                if (!data1) {
-                    throw new Error("Contract not found");
+                if (!contractData) {
+                    throw new Error("Contract data not found");
                 }
 
-                // ----------------------------------------------------
+                // ---------------------------------------------
                 // Generate PDF
-                // ----------------------------------------------------
+                // ---------------------------------------------
+                console.log(JSON.stringify(contractData, null, 2));
 
-                const pdfPath = await generateContractPDF(data1);
+                const pdfPath =
+    await generateContractPDF(contractData);
 
-                console.log("\n✅ PDF Generated Successfully");
+console.log("\n✅ PDF Generated Successfully");
+console.log("📄 PDF Saved At:");
+console.log(pdfPath);
 
-                console.log("📄 PDF Saved At:");
+// Upload to Cloudinary
+const uploadResult = await uploadPDF(pdfPath);
 
-                console.log(pdfPath);
+// Update Contract
+          await Contract.findByIdAndUpdate(
+    job.contractId,
+    {
+        pdfUrl: uploadResult.pdfUrl,
+        pdfPublicId: uploadResult.pdfPublicId,
+        pdfFileName: uploadResult.pdfFileName,
+        status: "ACTIVE",
+        generatedAt: new Date(),
+    }
+);
+     await publishContractGenerated({
+    contractId: job.contractId,
+    certificateNumber: contractData.contract.certificateNumber,
+    buyerId: contractData.contract.buyerId,
+    farmerId: contractData.contract.farmerId,
+    pdfUrl: uploadResult.pdfUrl,
+    generatedAt: new Date(),
+    });
+
+console.log("✅ Contract Updated Successfully");
+
+// Delete Local PDF
+fs.unlinkSync(pdfPath);
+
+console.log("🗑 Local PDF Deleted");
 
                 channel.ack(message);
+
 
             } catch (error) {
 
                 console.error("\n❌ PDF Worker Error");
-
                 console.error(error);
 
-                // Don't requeue for now.
-                // We'll implement retries later.
                 channel.nack(
                     message,
                     false,
