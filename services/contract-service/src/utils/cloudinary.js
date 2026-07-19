@@ -55,6 +55,8 @@ export const uploadPDF = async (pdfPath) => {
             }
 
         );
+        
+   console.log(result);
 
         return {
 

@@ -82,14 +82,19 @@ const uploadResult = await uploadPDF(pdfPath);
         generatedAt: new Date(),
     }
 );
-     await publishContractGenerated({
+await publishContractGenerated({
+
     contractId: job.contractId,
-    certificateNumber: contractData.contract.certificateNumber,
-    buyerId: contractData.contract.buyerId,
-    farmerId: contractData.contract.farmerId,
+
+    certificateNumber:
+        contractData.contract.certificateNumber,
+
     pdfUrl: uploadResult.pdfUrl,
-    generatedAt: new Date(),
-    });
+
+    generatedAt: new Date()
+
+}); generatedAt: new Date()
+    
 
 console.log("✅ Contract Updated Successfully");
 
