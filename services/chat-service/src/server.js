@@ -1,48 +1,38 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import mongoose from "mongoose";
-
 import app from "./app.js";
+import connectDB from "./config/db.js";
+import { connectRabbitMQ } from "./config/rabbitmq.js";
 
-const PORT = process.env.PORT || 5006;
+const PORT = process.env.PORT || 6000;
 
-/*
-|--------------------------------------------------------------------------
-| MongoDB Connection
-|--------------------------------------------------------------------------
-*/
+const startServer = async () => {
 
-const connectDB = async () => {
     try {
 
-        await mongoose.connect(process.env.MONGO_URI);
+        await connectDB();
 
-        console.log("✅ MongoDB Connected");
+        await connectRabbitMQ();
 
-    } catch (error) {
+        app.listen(PORT, () => {
 
-        console.error("❌ MongoDB Connection Failed");
+            console.log(
+                `🚀 Chat Service running on port ${PORT}`
+            );
 
-        console.error(error.message);
+        });
+
+    }
+
+    catch (error) {
+
+        console.error(error);
 
         process.exit(1);
 
     }
+
 };
 
-connectDB();
-
-/*
-|--------------------------------------------------------------------------
-| Start Server
-|--------------------------------------------------------------------------
-*/
-
-app.listen(PORT, () => {
-
-    console.log(
-        `🚀 Chat Service running on port ${PORT}`
-    );
-
-});
+startServer();

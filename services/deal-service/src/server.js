@@ -1,20 +1,18 @@
 import dotenv from "dotenv";
 
+// Load .env first
 dotenv.config();
 
-import app from "./app.js";
-import connectDB from "./config/database.js";
-import { connectRabbitMQ } from "./config/rabbitmq.js";
+// Import everything after dotenv is loaded
+const { default: connectDB } = await import("./config/database.js");
+const { connectRabbitMQ } = await import("./config/rabbitmq.js");
+const { default: app } = await import("./app.js");
 
 const PORT = process.env.PORT || 5004;
 
 const startServer = async () => {
     try {
-
-        // Connect Deal Service database
         await connectDB();
-
-        // Connect RabbitMQ
         await connectRabbitMQ();
 
         app.listen(PORT, () => {
@@ -22,7 +20,7 @@ const startServer = async () => {
         });
 
     } catch (error) {
-        console.error("❌ Failed to start Deal Service:", error.message);
+        console.error("❌ Failed to start Deal Service:", error);
         process.exit(1);
     }
 };

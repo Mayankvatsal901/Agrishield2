@@ -5,6 +5,7 @@ import { createChat } from "../clients/chat.client.js";
 import {
     publishDealCreated,
 } from "../events/publisher.js";
+import userClient from "../clients/user.client.js";
 
 /*
 |--------------------------------------------------------------------------
@@ -139,17 +140,67 @@ export const createDeal = async (buyerId, productId) => {
         | Create Chat
         |--------------------------------------------------------------------------
         */
+       
+/*
+|--------------------------------------------------------------------------
+| Fetch Buyer Profile
+|--------------------------------------------------------------------------
+*/
+console.log("USER SERVICE URL:", process.env.USER_SERVICE_URL);
+const url = `/api/internal/users/${buyerId}`;
 
-        const chat = await createChat({
+console.log("Base URL:", userClient.defaults.baseURL);
+console.log("Path:", url);
+let buyerResponse;
 
-            dealId: deal._id,
+try {
 
-            buyerId,
+     buyerResponse = await userClient.get(url);
 
-            farmerId: product.farmerId,
+} catch (error) {
 
-        });
+    console.log(error);
 
+    console.log(error.message);
+
+    console.log(error.config);
+
+    throw error;
+
+}
+
+const buyerProfile = buyerResponse.data.data;
+console.log(buyerProfile)
+
+
+/*
+|--------------------------------------------------------------------------
+| Fetch Farmer Profile
+|--------------------------------------------------------------------------
+*/
+
+const farmerResponse = await userClient.get(
+
+    `/api/internal/users/${product.farmerId}`
+
+);
+
+const farmerProfile = farmerResponse.data.data;
+console.log("Buyer Language:", buyerResponse.data.data.language);
+console.log("Farmer Language:", farmerResponse.data.data.language);
+const chat = await createChat({
+
+    dealId: deal._id,
+
+    buyerId,
+
+    farmerId: product.farmerId,
+
+    buyerLanguage: buyerProfile.language,
+
+    farmerLanguage: farmerProfile.language,
+
+});
         /*
         |--------------------------------------------------------------------------
         | Update Deal

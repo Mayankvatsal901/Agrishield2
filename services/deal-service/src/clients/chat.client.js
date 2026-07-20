@@ -1,19 +1,16 @@
 import axios from "axios";
 
-
-    
-
-
-
 export const createChat = async ({
     dealId,
     buyerId,
     farmerId,
+    buyerLanguage,
+    farmerLanguage,
 }) => {
-    const CHAT_SERVICE_URL =
-    process.env.CHAT_SERVICE_URL;
-    
-console.log("CHAT SERVICE URL =", CHAT_SERVICE_URL);
+
+    const CHAT_SERVICE_URL = process.env.CHAT_SERVICE_URL;
+
+    console.log("CHAT SERVICE URL =", CHAT_SERVICE_URL);
 
     try {
 
@@ -25,6 +22,8 @@ console.log("CHAT SERVICE URL =", CHAT_SERVICE_URL);
                 dealId,
                 buyerId,
                 farmerId,
+                buyerLanguage,
+                farmerLanguage,
             }
 
         );
@@ -33,13 +32,14 @@ console.log("CHAT SERVICE URL =", CHAT_SERVICE_URL);
 
     } catch (error) {
 
-        console.error("Chat Service Error:");
-    
+        console.error("❌ Chat Service Error:");
+
         console.error(error.response?.data);
-    
+
         console.error(error.message);
-    
+
         throw error;
-    
+
     }
-}
+
+};
