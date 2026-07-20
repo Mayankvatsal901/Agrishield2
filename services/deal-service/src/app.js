@@ -3,6 +3,7 @@ import cors from "cors";
 
 import dealRoutes from "./routes/deal.routes.js";
 import offerRoutes from "./routes/offer.routes.js";
+import internalRoutes from "./routes/internal.routes.js" 
 
 
 const app = express();
@@ -27,6 +28,11 @@ app.use(express.json());
 app.use(
     "/api/deals",
     dealRoutes
+);
+
+app.use(
+    "/api/internal",
+    internalRoutes
 );
 
 

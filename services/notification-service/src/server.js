@@ -9,8 +9,7 @@ dotenv.config();
 import app from "./app.js";
 
 import { connectRabbitMQ } from "./config/rabbitmq.js";
-
-import { startNotificationSubscriber } from "./events/subscriber.js";
+import { subscribeContractEvents } from "./events/subscriber.js";
 
 // ============================================================
 // Start Server
@@ -22,31 +21,23 @@ const startServer = async () => {
 
     try {
 
-        // ---------------------------------------------
-        // RabbitMQ
-        // ---------------------------------------------
-
         await connectRabbitMQ();
 
-        // ---------------------------------------------
-        // Subscriber
-        // ---------------------------------------------
-
-        await startNotificationSubscriber();
-
-        // ---------------------------------------------
-        // Express Server
-        // ---------------------------------------------
+        await subscribeContractEvents();
 
         app.listen(PORT, () => {
 
-            console.log(`🚀 Notification Service running on port ${PORT}`);
+            console.log(
+                `🚀 Notification Service running on port ${PORT}`
+            );
 
         });
 
     } catch (error) {
 
-        console.error("❌ Failed to start Notification Service");
+        console.error(
+            "❌ Failed to start Notification Service"
+        );
 
         console.error(error);
 

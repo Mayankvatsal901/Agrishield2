@@ -90,6 +90,9 @@ await publishContractGenerated({
         contractData.contract.certificateNumber,
 
     pdfUrl: uploadResult.pdfUrl,
+    negotiationRoomId:contractData.deal.negotiationRoomId,
+
+    chatId:contractData.deal.chatId,
 
     generatedAt: new Date()
 

@@ -1,26 +1,65 @@
-// ============================================================
-// DEAL EVENT PUBLISHER
-// ------------------------------------------------------------
-// Responsible for publishing Deal related events.
-//
-// Example:
-// - deal.accepted
-// - deal.closed
-// ============================================================
-
 import { getChannel } from "../config/rabbitmq.js";
 
-export const publishDealAccepted = async (payload) => {
+/*
+|--------------------------------------------------------------------------
+| Generic Publisher
+|--------------------------------------------------------------------------
+*/
+
+const publish = async (routingKey, payload) => {
+
     const channel = getChannel();
 
     channel.publish(
         "agrishield.events",
-        "deal.accepted",
+        routingKey,
         Buffer.from(JSON.stringify(payload)),
         {
             persistent: true,
         }
     );
 
-    console.log("📤 Published deal.accepted", payload);
+};
+
+/*
+|--------------------------------------------------------------------------
+| Deal Created
+|--------------------------------------------------------------------------
+*/
+
+export const publishDealCreated = async (payload) => {
+
+    await publish(
+        "deal.created",
+        payload
+    );
+
+};
+
+/*
+|--------------------------------------------------------------------------
+| Deal Accepted
+|--------------------------------------------------------------------------
+*/
+
+export const publishDealAccepted = async (payload) => {
+
+    await publish(
+        "deal.accepted",
+        payload
+    );
+
+};
+
+
+export const publishOfferCreated = async (payload) => {
+
+    await publish(
+
+        "offer.created",
+
+        payload
+
+    );
+
 };

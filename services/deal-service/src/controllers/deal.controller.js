@@ -1,5 +1,7 @@
 import * as dealService from "../services/deal.service.js";
 
+import Deal from "../models/Deal.js";
+
 /*
 |--------------------------------------------------------------------------
 | CREATE / START DEAL CONTROLLER
@@ -64,4 +66,59 @@ export const createDeal = async (req, res) => {
         });
 
     }
+};
+
+// controllers/internal.controller.js
+
+
+export const getDealSocketData = async (req, res) => {
+
+    try {
+
+        const { dealId } = req.params;
+
+        const deal = await Deal.findById(dealId);
+
+        if (!deal) {
+
+            return res.status(404).json({
+                success: false,
+                message: "Deal not found"
+            });
+
+        }
+
+        return res.json({
+
+            success: true,
+
+            data: {
+
+                dealId: deal._id,
+
+                negotiationRoomId: deal.negotiationRoomId,
+
+                chatId: deal.chatId,
+
+            }
+
+        });
+
+    } catch (error) {
+
+        console.error("Internal Deal API Error:");
+        console.error(error);
+    
+        return res.status(500).json({
+    
+            success: false,
+    
+            message: error.message,
+    
+            stack: error.stack
+    
+        });
+    
+    }
+
 };
