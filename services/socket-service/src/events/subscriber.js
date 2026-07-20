@@ -375,5 +375,122 @@ channel.consume(
     }
 
 );
+/*
+|--------------------------------------------------------------------------
+| MESSAGE CREATED QUEUE
+|--------------------------------------------------------------------------
+*/
 
+const messageQueue = "socket.message.created";
+
+await channel.assertQueue(
+    messageQueue,
+    {
+        durable: true,
+    }
+);
+
+await channel.bindQueue(
+    messageQueue,
+    "agrishield.events",
+    "message.created"
+);
+
+console.log(
+    "📡 Waiting for message.created events..."
+);
+
+channel.consume(
+    messageQueue,
+    (message) => {
+
+        if (!message) return;
+
+        try {
+
+            const payload = JSON.parse(
+                message.content.toString()
+            );
+
+            console.log("");
+
+            console.log(
+                "======================================="
+            );
+
+            console.log(
+                "💬 New Message Received"
+            );
+
+            console.log(
+                "Chat:",
+                payload.chatId
+            );
+
+            console.log(
+                "Sender:",
+                payload.senderId
+            );
+
+            console.log(
+                "Role:",
+                payload.senderRole
+            );
+
+            console.log(
+                "Type:",
+                payload.messageType
+            );
+
+            console.log(
+                "Original:",
+                payload.originalMessage
+            );
+
+            console.log(
+                "Translated:",
+                payload.translatedMessage
+            );
+
+            console.log(
+                "Language:",
+                payload.translatedLanguage
+            );
+
+            const io = getIO();
+
+            io.to(
+                payload.chatId.toString()
+            ).emit(
+                "message-received",
+                payload
+            );
+
+            console.log(
+                `✅ Message emitted to chat ${payload.chatId}`
+            );
+
+            console.log(
+                "======================================="
+            );
+
+            channel.ack(message);
+
+        } catch (error) {
+
+            console.error(
+                "❌ Error consuming message.created:",
+                error
+            );
+
+            channel.nack(
+                message,
+                false,
+                false
+            );
+
+        }
+
+    }
+);
 };
