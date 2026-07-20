@@ -3,7 +3,7 @@ import express from "express";
 import authMiddleware from "../../../../shared/middleware/authMiddleware.js";
 
 import {
-    createDeal,
+    createDeal,getDealSocketData
 } from "../controllers/deal.controller.js";
 
 
@@ -30,6 +30,12 @@ router.post(
     authMiddleware,
     createDeal
 );
+
+router.get(
+    "/deals/:dealId/socket-data",
+    getDealSocketData
+);
+
 
 
 export default router;

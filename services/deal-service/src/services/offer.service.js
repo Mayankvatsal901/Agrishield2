@@ -1,6 +1,8 @@
 import Deal from "../models/Deal.js";
 import Offer from "../models/Offer.js";
 import { publishDealAccepted } from "../events/publisher.js";
+import { publishOfferCreated } from "../events/publisher.js";
+
 
 // ============================================================
 // CREATE OFFER SERVICE
@@ -169,6 +171,39 @@ if (deal.status !== "OPEN") {
     deal.currentOfferId = offer._id;
 
     await deal.save();
+
+    await publishOfferCreated({
+
+        dealId: deal._id,
+    
+        negotiationRoomId: deal.negotiationRoomId,
+    
+        offer: {
+    
+            _id: offer._id,
+    
+            offeredBy: offer.offeredBy,
+    
+            offeredByRole: offer.offeredByRole,
+    
+            quantity: offer.quantity,
+    
+            pricePerUnit: offer.pricePerUnit,
+    
+            unit: offer.unit,
+    
+            isFinalOffer: offer.isFinalOffer,
+    
+            status: offer.status,
+    
+            createdAt: offer.createdAt,
+    
+            totalPrice:
+                offer.quantity * offer.pricePerUnit,
+    
+        }
+    
+    });
 
 
     // --------------------------------------------------------

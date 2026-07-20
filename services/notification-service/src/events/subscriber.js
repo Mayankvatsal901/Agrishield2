@@ -1,69 +1,47 @@
-// ============================================================
-// NOTIFICATION EVENT SUBSCRIBER
-// ============================================================
-
 import { getChannel } from "../config/rabbitmq.js";
+import { publishNotificationCreated } from "./publisher.js";
 
-const EXCHANGE_NAME = "agrishield.events";
-
-const QUEUE_NAME = "notification.contract.generated";
-
-const ROUTING_KEY = "contract.generated";
-
-// ============================================================
-// Start Notification Subscriber
-// ============================================================
-
-export const startNotificationSubscriber = async () => {
+export const subscribeContractEvents = async () => {
 
     const channel = getChannel();
 
-    // --------------------------------------------------------
-    // Create Exchange
-    // --------------------------------------------------------
+    /*
+    |--------------------------------------------------------------------------
+    | Queue
+    |--------------------------------------------------------------------------
+    */
 
-    await channel.assertExchange(
-        EXCHANGE_NAME,
-        "topic",
-        {
-            durable: true,
-        }
-    );
+    const queue = "notification.contract.generated";
 
-    // --------------------------------------------------------
-    // Create Queue
-    // --------------------------------------------------------
+    await channel.assertQueue(queue, {
+        durable: true,
+    });
 
-    await channel.assertQueue(
-        QUEUE_NAME,
-        {
-            durable: true,
-        }
-    );
-
-    // --------------------------------------------------------
-    // Bind Queue
-    // --------------------------------------------------------
+    /*
+    |--------------------------------------------------------------------------
+    | Binding
+    |--------------------------------------------------------------------------
+    */
 
     await channel.bindQueue(
-
-        QUEUE_NAME,
-
-        EXCHANGE_NAME,
-
-        ROUTING_KEY
-
+        queue,
+        "agrishield.events",
+        "contract.generated"
     );
 
-    console.log("🔔 Waiting for contract.generated events...");
+    console.log(
+        "📡 Waiting for contract.generated events..."
+    );
 
-    // --------------------------------------------------------
-    // Consume Messages
-    // --------------------------------------------------------
+    /*
+    |--------------------------------------------------------------------------
+    | Consume
+    |--------------------------------------------------------------------------
+    */
 
     channel.consume(
 
-        QUEUE_NAME,
+        queue,
 
         async (message) => {
 
@@ -71,18 +49,76 @@ export const startNotificationSubscriber = async () => {
 
             try {
 
-                const event = JSON.parse(
+                const payload = JSON.parse(
                     message.content.toString()
                 );
 
-                console.log("\n======================================");
-                console.log("📩 CONTRACT GENERATED EVENT RECEIVED");
-                console.log("======================================");
+                console.log("");
 
-                console.log(event);
+                console.log(
+                    "======================================="
+                );
 
-                console.log("======================================\n");
+                console.log(
+                    "📄 Contract Generated"
+                );
 
+                console.log(
+                    "Contract:",
+                    payload.contractId
+                );
+
+                console.log(
+                    "Buyer:",
+                    payload.buyerId
+                );
+
+                console.log(
+                    "Farmer:",
+                    payload.farmerId
+                );
+
+                console.log(
+                    "PDF:",
+                    payload.pdfUrl
+                );
+
+                console.log(
+                    "Hash:",
+                    payload.blockchainHash
+                );
+
+                console.log(
+                    "======================================="
+                );
+
+                /*
+                |--------------------------------------------------------------------------
+                | Publish Notification
+                |--------------------------------------------------------------------------
+                */
+
+                await publishNotificationCreated({
+
+                    type: "CONTRACT_GENERATED",
+                
+                    contractId: payload.contractId,
+                
+                    dealId: payload.dealId,
+                
+                    buyerId: payload.buyerId,
+                
+                    farmerId: payload.farmerId,
+                
+                    negotiationRoomId: payload.negotiationRoomId,
+                
+                    chatId: payload.chatId,
+                
+                    pdfUrl: payload.pdfUrl,
+                
+                    blockchainHash: payload.blockchainHash,
+                
+                });
                 channel.ack(message);
 
             } catch (error) {

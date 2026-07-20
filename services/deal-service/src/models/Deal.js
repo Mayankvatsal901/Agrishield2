@@ -76,6 +76,19 @@ const dealSchema = new mongoose.Schema(
             ref: "Offer",
             default: null,
         },
+        /**
+ * Chat room associated with this deal.
+ * Created immediately when the deal is created.
+ */
+        chatId: {
+            type: mongoose.Schema.Types.ObjectId,
+            default: null,
+        },
+        
+        negotiationRoomId: {
+            type: String,
+            default: null,
+        },
 
         // Set when a final offer has been accepted.
         acceptedOfferId: {

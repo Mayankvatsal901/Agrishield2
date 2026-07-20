@@ -2,23 +2,19 @@
   "name": "blockchain",
   "version": "1.0.0",
   "main": "hardhat.config.js",
+  
   "directories": {
     "test": "test"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "devDependencies": {
+    "hardhat": "^2.22.17"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
-  "type": "module",
-  "devDependencies": {
-    "@nomicfoundation/hardhat-toolbox": "^6.1.2",
-    "hardhat": "^2.22.17"
-  },
-  "dependencies": {
-    "dotenv": "^17.4.2",
-    "ethers": "^6.17.0"
-  }
+  "description": ""
+ 
 }

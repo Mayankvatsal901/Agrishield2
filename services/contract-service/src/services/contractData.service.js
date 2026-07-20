@@ -56,6 +56,7 @@ const MARKETPLACE_SERVICE =
     // --------------------------------------------------------
     // Fetch Farmer
     // --------------------------------------------------------
+    
     console.log("Fetching Farmer...");
     const farmerResponse =
         await axios.get(
@@ -68,6 +69,7 @@ const MARKETPLACE_SERVICE =
     // --------------------------------------------------------
     // Fetch Product
     // --------------------------------------------------------
+
     console.log("Fetching Product...");
     const productResponse =
         await axios.get(
@@ -81,6 +83,31 @@ const MARKETPLACE_SERVICE =
     // --------------------------------------------------------
     // Return Complete Data
     // --------------------------------------------------------
+   
+
+console.log("Fetching Deal Socket Data...");
+const DEAL_SERVICE =
+    process.env.DEAL_SERVICE_URL
+    console.log(DEAL_SERVICE);
+    let dealResponse;
+
+try {
+
+      dealResponse = await axios.get(
+        `${DEAL_SERVICE}/api/internal/deals/${contract.dealId}/socket-data`
+    );
+
+    console.log("Deal Socket Data fetched successfully");
+
+} catch (error) {
+
+    console.log("================================");
+    console.log(error.response?.data);
+    console.log("================================");
+
+    throw error;
+
+}
 
     return {
 
@@ -91,6 +118,8 @@ const MARKETPLACE_SERVICE =
         farmer: farmerResponse.data.data,
 
         product: productResponse.data.data,
+
+        deal: dealResponse.data.data,
 
     };
 

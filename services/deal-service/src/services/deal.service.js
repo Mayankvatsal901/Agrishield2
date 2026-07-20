@@ -1,6 +1,10 @@
 import Deal from "../models/Deal.js";
 import { getProductDetails } from "../clients/marketplace.client.js";
 
+import { createChat } from "../clients/chat.client.js";
+import {
+    publishDealCreated,
+} from "../events/publisher.js";
 
 /*
 |--------------------------------------------------------------------------
@@ -25,21 +29,52 @@ import { getProductDetails } from "../clients/marketplace.client.js";
 |--------------------------------------------------------------------------
 */
 
+/**
+ * ============================================================================
+ * FILE: Deal.js
+ * SERVICE: Deal Service
+ *
+ * PURPOSE:
+ * Represents one negotiation/deal between a Buyer and Farmer
+ * for a particular marketplace product.
+ *
+ * CREATED WHEN:
+ * Buyer clicks "Start Negotiation" from the Deal Room UI.
+ *
+ * USED BY FRONTEND:
+ * - Buyer Deal Room
+ * - Farmer Deal Room
+ * - My Deals Page
+ *
+ * RELATIONSHIPS:
+ * Product  -> Marketplace Service
+ * Buyer    -> Auth/User Service
+ * Farmer   -> Auth/User Service
+ * Offers   -> Offer collection through dealId
+ *
+ * IMPORTANT:
+ * Chat is NOT stored here.
+ * Chat Service and Deal Service are independent.
+ * ============================================================================
+ */
+
 export const createDeal = async (buyerId, productId) => {
 
-    // Get product details from Marketplace Service
+    /*
+    |--------------------------------------------------------------------------
+    | Get Product Details
+    |--------------------------------------------------------------------------
+    */
+
     const product = await getProductDetails(productId);
 
     if (!product) {
         throw new Error("Product not found.");
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | Validate Product Status
-    |--------------------------------------------------------------------------
-    | Only ACTIVE products should allow new deals.
     |--------------------------------------------------------------------------
     */
 
@@ -49,10 +84,9 @@ export const createDeal = async (buyerId, productId) => {
         );
     }
 
-
     /*
     |--------------------------------------------------------------------------
-    | Prevent Farmer From Creating Deal With Own Product
+    | Prevent Farmer From Buying Own Product
     |--------------------------------------------------------------------------
     */
 
@@ -62,12 +96,9 @@ export const createDeal = async (buyerId, productId) => {
         );
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | Check Existing Deal
-    |--------------------------------------------------------------------------
-    | Same buyer + same product should reuse the existing Deal Room.
     |--------------------------------------------------------------------------
     */
 
@@ -77,18 +108,15 @@ export const createDeal = async (buyerId, productId) => {
     });
 
     if (existingDeal) {
-
         return {
             deal: existingDeal,
             alreadyExists: true,
         };
-
     }
-
 
     /*
     |--------------------------------------------------------------------------
-    | Create Deal Room
+    | Create Deal
     |--------------------------------------------------------------------------
     */
 
@@ -100,17 +128,88 @@ export const createDeal = async (buyerId, productId) => {
 
         productId,
 
-        chatRoomId: null,
-
-        negotiationId: null,
-
         status: "OPEN",
 
     });
 
+    try {
 
-    return {
-        deal,
-        alreadyExists: false,
-    };
+        /*
+        |--------------------------------------------------------------------------
+        | Create Chat
+        |--------------------------------------------------------------------------
+        */
+
+        const chat = await createChat({
+
+            dealId: deal._id,
+
+            buyerId,
+
+            farmerId: product.farmerId,
+
+        });
+
+        /*
+        |--------------------------------------------------------------------------
+        | Update Deal
+        |--------------------------------------------------------------------------
+        */
+
+        deal.chatId = chat.chatId;
+
+        deal.negotiationRoomId = `negotiation_${deal._id}`;
+
+        await deal.save();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Publish Deal Created Event
+        |--------------------------------------------------------------------------
+        */
+        console.log({
+            dealId: deal._id,
+            chatId: deal.chatId,
+            negotiationRoomId: deal.negotiationRoomId
+        });
+        await publishDealCreated({
+
+            dealId: deal._id,
+        
+            buyerId,
+        
+            farmerId: product.farmerId,
+        
+            chatId: deal.chatId,
+        
+            negotiationRoomId: deal.negotiationRoomId,
+        
+        });
+       
+
+        return {
+
+            deal,
+
+            alreadyExists: false,
+
+        };
+
+    } catch (error) {
+
+        /*
+        |--------------------------------------------------------------------------
+        | Rollback
+        |--------------------------------------------------------------------------
+        | Chat creation failed or Event publishing failed.
+        | Remove the Deal to avoid inconsistent data.
+        |--------------------------------------------------------------------------
+        */
+
+        await Deal.findByIdAndDelete(deal._id);
+
+        throw error;
+
+    }
+
 };
