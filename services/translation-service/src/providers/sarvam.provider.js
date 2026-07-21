@@ -1,4 +1,6 @@
 import { SarvamAIClient } from "sarvamai";
+import fs from "node:fs";
+import { convertToWav } from "../utils/audioConverter.js";
 
 const client = new SarvamAIClient({
     apiSubscriptionKey: process.env.SARVAM_API_KEY,
@@ -47,5 +49,42 @@ export const translateText = async ({
             response.translated_text,
 
     };
+
+};
+export const speechToTextProvider = async (audioFile) => {
+    console.log({
+        originalname: audioFile.originalname,
+        mimetype: audioFile.mimetype,
+        size: audioFile.size,
+    });
+
+    try {
+        const wavPath = await convertToWav(audioFile.path);
+
+        const response = await client.speechToText.transcribe({
+
+            file: fs.createReadStream(wavPath),
+
+            model: "saaras:v3",
+
+            language_code: "en-IN",
+
+            mode: "transcribe",
+
+            sample_rate: 16000,
+
+        });
+
+        return {
+
+            text: response.transcript,
+
+        };
+
+    } finally {
+
+        fs.unlink(audioFile.path, () => {});
+
+    }
 
 };
