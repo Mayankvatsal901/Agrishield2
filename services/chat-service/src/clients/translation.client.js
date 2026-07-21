@@ -1,40 +1,67 @@
 import axios from "axios";
+import FormData from "form-data";
 
+const getTranslationClient = () => {
+    return axios.create({
+        baseURL: process.env.TRANSLATION_SERVICE_URL,
+        timeout: 60000,
+    });
+};
 
-
+/*
+=========================================================
+Translate Text
+=========================================================
+*/
 
 export const translateText = async ({
     text,
     sourceLanguage,
     targetLanguage,
 }) => {
-    const translationClient = axios.create({
-        baseURL: process.env.TRANSLATION_SERVICE_URL,
-        timeout: 10000,
-    });
 
-    try {
+    const translationClient = getTranslationClient();
 
-        console.log("Calling:", process.env.TRANSLATION_SERVICE_URL);
+    const response = await translationClient.post(
+        "/api/translate",
+        {
+            text,
+            sourceLanguage,
+            targetLanguage,
+        }
+    );
 
-        const response = await translationClient.post(
-            "/api/translate",
-            {
-                text,
-                sourceLanguage,
-                targetLanguage,
-            }
-        );
+    return response.data.data;
+};
 
-        console.log(response.data);
+/*
+=========================================================
+Speech To Text
+=========================================================
+*/
 
-        return response.data.data;
+export const speechToText = async (audioFile) => {
 
-    } catch (error) {
+    const translationClient = getTranslationClient();
 
-        console.log(error.response?.data);
-        console.log(error.message);
+    const formData = new FormData();
 
-        throw error;
-    }
+    formData.append(
+        "audio",
+        audioFile.buffer,
+        {
+            filename: audioFile.originalname,
+            contentType: audioFile.mimetype,
+        }
+    );
+
+    const response = await translationClient.post(
+        "/api/speech-to-text",
+        formData,
+        {
+            headers: formData.getHeaders(),
+        }
+    );
+
+    return response.data.data;
 };

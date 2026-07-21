@@ -3,6 +3,8 @@ import Chat from "../models/Chat.js";
 import Message from "../models/Message.js";
 import { publishMessageCreated } from "../events/publisher.js";
 import { translateText } from "../clients/translation.client.js";
+import { speechToText } from "../clients/translation.client.js";
+
 
    
 export const sendMessage = async ({
@@ -11,6 +13,7 @@ export const sendMessage = async ({
     senderRole,
     message,
     messageType,
+    audioFile,
 }) => {
 
     /*
@@ -48,11 +51,83 @@ export const sendMessage = async ({
 
     /*
     =====================================================
+    Process Voice
+    =====================================================
+    */
+
+    let finalMessage = message;
+
+    let audioUrl = null;
+
+    if (messageType === "VOICE") {
+
+        if (!audioFile) {
+            throw new Error("Voice file is required.");
+        }
+
+        console.log("🎤 Voice Message Received");
+
+        /*
+        -----------------------------------------------------
+        Upload audio to Cloudinary (Next Step)
+        -----------------------------------------------------
+        */
+
+        // audioUrl = await uploadAudio(audioFile);
+
+        /*
+        -----------------------------------------------------
+        Speech To Text
+        -----------------------------------------------------
+        */
+
+        try {
+            console.log("🎤 Calling Speech-to-Text...");
+            console.log("📄 File Details:", {
+                originalname: audioFile.originalname,
+                mimetype: audioFile.mimetype,
+                size: audioFile.size,
+            });
+        
+            const transcript = await speechToText(audioFile);
+        
+            console.log("✅ Speech-to-Text Response:", transcript);
+        
+            finalMessage = transcript.text;
+        
+        } catch (error) {
+            console.error("❌ Speech-to-Text Error");
+        
+            console.error("Message:", error.message);
+        
+            if (error.code) {
+                console.error("Code:", error.code);
+            }
+        
+            if (error.config) {
+                console.error("Request URL:", error.config.baseURL + error.config.url);
+                console.error("Base URL:", error.config.baseURL);
+                console.error("Endpoint:", error.config.url);
+            }
+        
+            if (error.response) {
+                console.error("Status:", error.response.status);
+                console.error("Response Data:", error.response.data);
+            }
+        
+            throw error;
+        }
+
+    }
+
+    /*
+    =====================================================
     Translation
     =====================================================
     */
 
     let translatedMessage = null;
+
     let translatedLanguage = null;
 
     const translationRequired =
@@ -65,7 +140,7 @@ export const sendMessage = async ({
         const translationResponse =
             await translateText({
 
-                text: message,
+                text: finalMessage,
 
                 sourceLanguage: senderLanguage,
 
@@ -99,13 +174,15 @@ export const sendMessage = async ({
 
         senderRole,
 
-        originalMessage: message,
+        messageType,
+
+        originalMessage: finalMessage,
 
         translatedMessage,
 
         translatedLanguage,
 
-        messageType,
+        audioUrl,
 
     });
 
@@ -143,6 +220,8 @@ export const sendMessage = async ({
 
         translatedLanguage: newMessage.translatedLanguage,
 
+        audioUrl: newMessage.audioUrl,
+
         messageType: newMessage.messageType,
 
         createdAt: newMessage.createdAt,
@@ -151,8 +230,7 @@ export const sendMessage = async ({
 
     return newMessage;
 
-};;
-   
+};
 
 export const getMessages = async ({
 

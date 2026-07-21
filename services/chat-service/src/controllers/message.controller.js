@@ -22,10 +22,14 @@ export const sendMessage = async (req, res) => {
             senderRole,
 
             imageUrl,
+            
+            
 
-            audioUrl,
+           
 
         } = req.body;
+        const audioFile = req.file;
+        
 
         const result = await messageService.sendMessage({
 
@@ -41,7 +45,7 @@ export const sendMessage = async (req, res) => {
 
             imageUrl,
 
-            audioUrl,
+            audioFile,
 
         });
 

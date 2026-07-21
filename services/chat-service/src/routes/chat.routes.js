@@ -8,7 +8,8 @@ import {
 import {
     sendMessage,
     getMessages,
-} from "../controllers/message.controller.js";
+    } from "../controllers/message.controller.js";
+import upload from "../middleware/upload.middleware.js";
 
 const router = express.Router();
 
@@ -39,6 +40,7 @@ router.get(
 // Send a message
 router.post(
     "/:chatId/messages",
+    upload.single("audio"),
     sendMessage
 );
 console.log("✅ Chat routes loaded");
