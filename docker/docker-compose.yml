@@ -1,0 +1,69 @@
+version: "3.9"
+
+services:
+
+  # ── MongoDB ──────────────────────────────────────────────────────────────────
+  mongo:
+    image: mongo:7.0
+    container_name: agrishield_mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - agrishield_net
+
+  # ── Python AI Verification Service ───────────────────────────────────────────
+  ai-service:
+    build:
+      context: ./services/ai-service
+      dockerfile: Dockerfile
+    container_name: agrishield_ai
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      HOST: "0.0.0.0"
+      PORT: "8000"
+      UPLOAD_DIR: "/app/uploads"
+      OCR_LANG: "en"
+      OCR_USE_GPU: "false"
+      ELA_THRESHOLD: "12.0"
+      NOISE_STD_THRESHOLD: "18.0"
+      COPY_MOVE_MIN_MATCHES: "30"
+      BLUR_THRESHOLD: "80.0"
+    volumes:
+      - uploads_data:/app/uploads
+    networks:
+      - agrishield_net
+
+  # ── Node.js Auth Service ──────────────────────────────────────────────────────
+  auth-service:
+    build:
+      context: ./services/auth-service
+      dockerfile: Dockerfile
+    container_name: agrishield_auth
+    restart: unless-stopped
+    ports:
+      - "5001:5001"
+    environment:
+      PORT: "5001"
+      MONGO_URI: "mongodb://mongo:27017/agrishield_auth"
+      JWT_SECRET: "${JWT_SECRET}"
+      AI_SERVICE_URL: "http://ai-service:8000"
+    volumes:
+      - uploads_data:/app/uploads
+    depends_on:
+      - mongo
+      - ai-service
+    networks:
+      - agrishield_net
+
+volumes:
+  mongo_data:
+  uploads_data:      # shared between auth-service and ai-service
+
+networks:
+  agrishield_net:
+    driver: bridge
