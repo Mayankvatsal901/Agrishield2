@@ -32,6 +32,7 @@ GET /api/ai/health
 
 Example response:
 
+
 ```json
 {
   "success": true,
