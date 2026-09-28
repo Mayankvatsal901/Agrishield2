@@ -1,3 +1,7 @@
+import dns from "node:dns";
+// Some Indian ISPs refuse the SRV lookups used by mongodb+srv:// addresses
+dns.setServers(["8.8.8.8", "1.1.1.1"]);
+
 import dotenv from "dotenv";
 
 // Load environment variables FIRST

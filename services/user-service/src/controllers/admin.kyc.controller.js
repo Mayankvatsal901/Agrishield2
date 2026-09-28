@@ -1,5 +1,4 @@
-
-
+import * as adminKYCService from "../services/kyc.admin.service.js";
 export const getAllKYC = async (req, res) => {
 
     try {

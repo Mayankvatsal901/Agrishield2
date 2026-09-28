@@ -389,7 +389,18 @@ export const respondToFinalOffer = async (
     // 5. Only FINAL offers can be accepted/rejected
     // --------------------------------------------------------
 
-    if (!offer.isFinalOffer) {
+        // A final offer can always be answered.
+    // A normal offer can be accepted only while it is still the
+    // latest offer in the deal (not replaced by a counter-offer).
+    const isLatestOffer =
+        deal.currentOfferId &&
+        deal.currentOfferId.toString() === offer._id.toString();
+
+    if (!offer.isFinalOffer && !isLatestOffer) {
+        throw new Error(
+            "This offer was replaced by a newer one. Respond to the latest offer."
+        );
+    }if (!offer.isFinalOffer) {
         throw new Error(
             "Only a final offer can be accepted or rejected."
         );

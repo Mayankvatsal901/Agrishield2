@@ -14,7 +14,7 @@ export const register = async (userData) => {
 
   if (role === "ADMIN") {
     throw new Error("Admin registration is not allowed.");
-}
+  }
 
   // 2. Hash Password
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -24,6 +24,7 @@ export const register = async (userData) => {
     email,
     password: hashedPassword,
     role,
+    emailVerified: true, // TEMP: no email verification flow yet. Remove when OTP is added.
   });
 
   // 4. Generate JWT
@@ -44,50 +45,52 @@ export const register = async (userData) => {
 
 
 export const login = async (userData) => {
-    const { email, password } = userData;
-  
-    // 1. Check if user exists
-    const user = await User.findOne({ email });
-  
-    if (!user) {
-      throw new Error("Invalid Email or Password");
-    }
+  const { email, password } = userData;
 
-    if (!user.emailVerified) {
-        throw new Error("Please verify your email first.");
-    }
-  
-    // 2. Check if account is active
-    if (!user.isActive) {
-      throw new Error("Your account has been blocked");
-    }
-  
-    // 3. Compare Password
-    const isPasswordCorrect = await bcrypt.compare(
-      password,
-      user.password
-    );
-  
-    if (!isPasswordCorrect) {
-      throw new Error("Invalid Email or Password");
-    }
-  
-    // 4. Update Last Login
-    user.lastLogin = new Date();
-    await user.save();
-  
-    // 5. Generate JWT
-    const token = generateToken(user);
-  
-    // 6. Return Response
-    return {
-      success: true,
-      message: "Login Successful",
-      token,
-      user: {
-        id: user._id,
-        email: user.email,
-        role: user.role,
-      },
-    };
+  // 1. Check if user exists
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    throw new Error("Invalid Email or Password");
+  }
+
+  // TEMP: disabled until an email verification (OTP) flow exists.
+  // Without it, every account created before the register change stays locked out.
+  // if (!user.emailVerified) {
+  //   throw new Error("Please verify your email first.");
+  // }
+
+  // 2. Check if account is active
+  if (!user.isActive) {
+    throw new Error("Your account has been blocked");
+  }
+
+  // 3. Compare Password
+  const isPasswordCorrect = await bcrypt.compare(
+    password,
+    user.password
+  );
+
+  if (!isPasswordCorrect) {
+    throw new Error("Invalid Email or Password");
+  }
+
+  // 4. Update Last Login
+  user.lastLogin = new Date();
+  await user.save();
+
+  // 5. Generate JWT
+  const token = generateToken(user);
+
+  // 6. Return Response
+  return {
+    success: true,
+    message: "Login Successful",
+    token,
+    user: {
+      id: user._id,
+      email: user.email,
+      role: user.role,
+    },
   };
+};

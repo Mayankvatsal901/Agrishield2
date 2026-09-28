@@ -122,3 +122,32 @@ export const getDealSocketData = async (req, res) => {
     }
 
 };
+// ============================================================
+// GET MY DEALS
+// ------------------------------------------------------------
+// GET /api/deals/my
+// Returns every deal where the logged-in user is the buyer
+// or the farmer, most recently active first.
+// ============================================================
+export const getMyDeals = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+
+        const deals = await Deal.find({
+            $or: [
+                { buyerId: userId },
+                { farmerId: userId },
+            ],
+        }).sort({ updatedAt: -1 });
+
+        return res.status(200).json({
+            success: true,
+            data: deals,
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};

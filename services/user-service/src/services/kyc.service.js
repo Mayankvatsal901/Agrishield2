@@ -96,6 +96,8 @@ export const uploadKYC = async (userId, kycData) => {
     
     });
 
+    return kyc;
+
 }
 
 export const getKYC = async (userId) => {
